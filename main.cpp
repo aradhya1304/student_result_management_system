@@ -7,18 +7,17 @@ int main() {
 
     Database database;
 
-    if (database.connect()) {
+    if (!database.connect()) {
 
-        cout << "Database connection test successful!"
+        cout << "Unable to connect to database."
              << endl;
 
-        database.disconnect();
-
-    } else {
-
-        cout << "Database connection failed!"
-             << endl;
+        return 1;
     }
+
+    database.displayStudents();
+
+    database.disconnect();
 
     return 0;
 }

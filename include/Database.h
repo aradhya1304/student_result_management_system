@@ -23,6 +23,8 @@ public:
     void disconnect();
 
     bool isConnected() const;
+
+    void displayStudents();
 };
 
 #endif
