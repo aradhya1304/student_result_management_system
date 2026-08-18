@@ -3,34 +3,53 @@
 
 #include <string>
 #include <memory>
+
 #include <mysqlx/xdevapi.h>
 
 #include "Student.h"
+#include "Subject.h"
 
 using namespace std;
 
 class Database {
+
 private:
+
     string host;
+
     string username;
+
     string password;
+
     string databaseName;
 
     unique_ptr<mysqlx::Session> session;
 
+
 public:
+
     Database();
 
     bool connect();
+
     void disconnect();
 
     bool isConnected() const;
 
+
+    // ======================================
+    // STUDENT OPERATIONS
+    // ======================================
+
     void displayStudents();
 
-    bool addStudent(const Student& student);
+    bool addStudent(
+        const Student& student
+    );
 
-    void searchStudent(int studentId);
+    void searchStudent(
+        int studentId
+    );
 
     bool updateStudent(
         int studentId,
@@ -41,7 +60,35 @@ public:
         int semester
     );
 
-    bool deleteStudent(int studentId);
+    bool deleteStudent(
+        int studentId
+    );
+
+
+    // ======================================
+    // SUBJECT OPERATIONS
+    // ======================================
+
+    bool addSubject(
+        const Subject& subject
+    );
+
+    void displaySubjects();
+
+    void searchSubject(
+        int subjectId
+    );
+
+    bool updateSubject(
+        int subjectId,
+        const string& subjectCode,
+        const string& subjectName,
+        int maxMarks
+    );
+
+    bool deleteSubject(
+        int subjectId
+    );
 };
 
 #endif

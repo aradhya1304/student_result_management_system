@@ -1,32 +1,50 @@
-#ifndef STUDENT_H
-#define STUDENT_H
+#ifndef SUBJECT_H
+#define SUBJECT_H
 
 #include <string>
 
 using namespace std;
 
-class Student {
+class Subject {
+
 private:
-    int studentId;
-    string name;
-    string email;
-    string course;
-    string phone;
-    int semester;
+
+    int subjectId;
+
+    string subjectCode;
+
+    string subjectName;
+
+    int maxMarks;
 
 public:
-    Student();
 
-    Student(int id, string name, string email,
-        string phone, string course, int semester);
+    Subject();
 
-    void displayStudent() const;
+    Subject(
+        int id,
+        string code,
+        string name,
+        int maxMarks
+    );
 
-    int getStudentId() const;
-    string getName() const;
-    string getEmail() const;
-    string getCourse() const;
-    int getSemester() const;
+    int getSubjectId() const;
+
+    string getSubjectCode() const;
+
+    string getSubjectName() const;
+
+    int getMaxMarks() const;
+
+    void setSubjectId(int id);
+
+    void setSubjectCode(const string& code);
+
+    void setSubjectName(const string& name);
+
+    void setMaxMarks(int marks);
+
+    void displaySubject() const;
 };
 
 #endif

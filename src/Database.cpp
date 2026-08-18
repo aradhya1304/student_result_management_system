@@ -4,12 +4,26 @@
 
 using namespace std;
 
+
+// ==========================================
+// CONSTRUCTOR
+// ==========================================
+
 Database::Database() {
+
     host = "localhost";
+
     username = "root";
+
     password = "";
+
     databaseName = "student_result_db";
 }
+
+
+// ==========================================
+// CONNECT
+// ==========================================
 
 bool Database::connect() {
 
@@ -27,6 +41,7 @@ bool Database::connect() {
 
         return true;
     }
+
     catch (const mysqlx::Error& error) {
 
         cerr << "MySQL Connection Error: "
@@ -37,11 +52,17 @@ bool Database::connect() {
     }
 }
 
+
+// ==========================================
+// DISCONNECT
+// ==========================================
+
 void Database::disconnect() {
 
     if (session) {
 
         session->close();
+
         session.reset();
 
         cout << "MySQL connection closed."
@@ -49,13 +70,24 @@ void Database::disconnect() {
     }
 }
 
+
+// ==========================================
+// CONNECTION STATUS
+// ==========================================
+
 bool Database::isConnected() const {
+
     return session != nullptr;
 }
 
 
+// ==================================================
+// STUDENT OPERATIONS
+// ==================================================
+
+
 // ==========================================
-// DISPLAY ALL STUDENTS
+// DISPLAY STUDENTS
 // ==========================================
 
 void Database::displayStudents() {
@@ -129,6 +161,7 @@ void Database::displayStudents() {
                  << endl;
         }
     }
+
     catch (const mysqlx::Error& error) {
 
         cerr << "Error reading students: "
@@ -183,6 +216,7 @@ bool Database::addStudent(
 
         return true;
     }
+
     catch (const mysqlx::Error& error) {
 
         cerr << "Error adding student: "
@@ -198,7 +232,9 @@ bool Database::addStudent(
 // SEARCH STUDENT
 // ==========================================
 
-void Database::searchStudent(int studentId) {
+void Database::searchStudent(
+    int studentId
+) {
 
     if (!session) {
 
@@ -268,12 +304,13 @@ void Database::searchStudent(int studentId) {
 
         if (!found) {
 
-            cout << "\nStudent with ID "
+            cout << "Student with ID "
                  << studentId
                  << " was not found."
                  << endl;
         }
     }
+
     catch (const mysqlx::Error& error) {
 
         cerr << "Error searching student: "
@@ -338,6 +375,7 @@ bool Database::updateStudent(
 
         return true;
     }
+
     catch (const mysqlx::Error& error) {
 
         cerr << "Error updating student: "
@@ -353,7 +391,9 @@ bool Database::updateStudent(
 // DELETE STUDENT
 // ==========================================
 
-bool Database::deleteStudent(int studentId) {
+bool Database::deleteStudent(
+    int studentId
+) {
 
     if (!session) {
 
@@ -392,9 +432,349 @@ bool Database::deleteStudent(int studentId) {
 
         return true;
     }
+
     catch (const mysqlx::Error& error) {
 
         cerr << "Error deleting student: "
+             << error.what()
+             << endl;
+
+        return false;
+    }
+}
+
+
+// ==================================================
+// SUBJECT OPERATIONS
+// ==================================================
+
+
+// ==========================================
+// ADD SUBJECT
+// ==========================================
+
+bool Database::addSubject(
+    const Subject& subject
+) {
+
+    if (!session) {
+
+        cout << "Database is not connected."
+             << endl;
+
+        return false;
+    }
+
+    try {
+
+        mysqlx::Schema db =
+            session->getSchema(databaseName);
+
+        mysqlx::Table subjects =
+            db.getTable("subjects");
+
+        subjects.insert(
+            "subject_code",
+            "subject_name",
+            "max_marks"
+        )
+        .values(
+            subject.getSubjectCode(),
+            subject.getSubjectName(),
+            subject.getMaxMarks()
+        )
+        .execute();
+
+        cout << "Subject added successfully!"
+             << endl;
+
+        return true;
+    }
+
+    catch (const mysqlx::Error& error) {
+
+        cerr << "Error adding subject: "
+             << error.what()
+             << endl;
+
+        return false;
+    }
+}
+
+
+// ==========================================
+// DISPLAY SUBJECTS
+// ==========================================
+
+void Database::displaySubjects() {
+
+    if (!session) {
+
+        cout << "Database is not connected."
+             << endl;
+
+        return;
+    }
+
+    try {
+
+        mysqlx::Schema db =
+            session->getSchema(databaseName);
+
+        mysqlx::Table subjects =
+            db.getTable("subjects");
+
+        mysqlx::RowResult result =
+            subjects.select("*").execute();
+
+        cout << "\n";
+        cout << "========================================"
+             << endl;
+
+        cout << "             SUBJECT RECORDS"
+             << endl;
+
+        cout << "========================================"
+             << endl;
+
+        bool found = false;
+
+        for (mysqlx::Row row : result) {
+
+            found = true;
+
+            cout << "Subject ID   : "
+                 << row[0].get<int>()
+                 << endl;
+
+            cout << "Subject Code : "
+                 << row[1].get<string>()
+                 << endl;
+
+            cout << "Subject Name : "
+                 << row[2].get<string>()
+                 << endl;
+
+            cout << "Max Marks    : "
+                 << row[3].get<int>()
+                 << endl;
+
+            cout << "----------------------------------------"
+                 << endl;
+        }
+
+        if (!found) {
+
+            cout << "No subjects found."
+                 << endl;
+        }
+    }
+
+    catch (const mysqlx::Error& error) {
+
+        cerr << "Error reading subjects: "
+             << error.what()
+             << endl;
+    }
+}
+
+
+// ==========================================
+// SEARCH SUBJECT
+// ==========================================
+
+void Database::searchSubject(
+    int subjectId
+) {
+
+    if (!session) {
+
+        cout << "Database is not connected."
+             << endl;
+
+        return;
+    }
+
+    try {
+
+        mysqlx::Schema db =
+            session->getSchema(databaseName);
+
+        mysqlx::Table subjects =
+            db.getTable("subjects");
+
+        mysqlx::RowResult result =
+            subjects.select("*")
+                    .where("subject_id = :id")
+                    .bind("id", subjectId)
+                    .execute();
+
+        bool found = false;
+
+        for (mysqlx::Row row : result) {
+
+            found = true;
+
+            cout << "\n";
+            cout << "========================================"
+                 << endl;
+
+            cout << "             SUBJECT FOUND"
+                 << endl;
+
+            cout << "========================================"
+                 << endl;
+
+            cout << "Subject ID   : "
+                 << row[0].get<int>()
+                 << endl;
+
+            cout << "Subject Code : "
+                 << row[1].get<string>()
+                 << endl;
+
+            cout << "Subject Name : "
+                 << row[2].get<string>()
+                 << endl;
+
+            cout << "Max Marks    : "
+                 << row[3].get<int>()
+                 << endl;
+
+            cout << "========================================"
+                 << endl;
+        }
+
+        if (!found) {
+
+            cout << "Subject with ID "
+                 << subjectId
+                 << " was not found."
+                 << endl;
+        }
+    }
+
+    catch (const mysqlx::Error& error) {
+
+        cerr << "Error searching subject: "
+             << error.what()
+             << endl;
+    }
+}
+
+
+// ==========================================
+// UPDATE SUBJECT
+// ==========================================
+
+bool Database::updateSubject(
+    int subjectId,
+    const string& subjectCode,
+    const string& subjectName,
+    int maxMarks
+) {
+
+    if (!session) {
+
+        cout << "Database is not connected."
+             << endl;
+
+        return false;
+    }
+
+    try {
+
+        mysqlx::Schema db =
+            session->getSchema(databaseName);
+
+        mysqlx::Table subjects =
+            db.getTable("subjects");
+
+        auto result =
+            subjects.update()
+                .set("subject_code", subjectCode)
+                .set("subject_name", subjectName)
+                .set("max_marks", maxMarks)
+                .where("subject_id = :id")
+                .bind("id", subjectId)
+                .execute();
+
+        if (result.getAffectedItemsCount() == 0) {
+
+            cout << "Subject with ID "
+                 << subjectId
+                 << " was not found."
+                 << endl;
+
+            return false;
+        }
+
+        cout << "Subject updated successfully!"
+             << endl;
+
+        return true;
+    }
+
+    catch (const mysqlx::Error& error) {
+
+        cerr << "Error updating subject: "
+             << error.what()
+             << endl;
+
+        return false;
+    }
+}
+
+
+// ==========================================
+// DELETE SUBJECT
+// ==========================================
+
+bool Database::deleteSubject(
+    int subjectId
+) {
+
+    if (!session) {
+
+        cout << "Database is not connected."
+             << endl;
+
+        return false;
+    }
+
+    try {
+
+        mysqlx::Schema db =
+            session->getSchema(databaseName);
+
+        mysqlx::Table subjects =
+            db.getTable("subjects");
+
+        auto result =
+            subjects.remove()
+                .where("subject_id = :id")
+                .bind("id", subjectId)
+                .execute();
+
+        if (result.getAffectedItemsCount() == 0) {
+
+            cout << "Subject with ID "
+                 << subjectId
+                 << " was not found."
+                 << endl;
+
+            return false;
+        }
+
+        cout << "Subject deleted successfully!"
+             << endl;
+
+        return true;
+    }
+
+    catch (const mysqlx::Error& error) {
+
+        cerr << "Error deleting subject: "
              << error.what()
              << endl;
 
