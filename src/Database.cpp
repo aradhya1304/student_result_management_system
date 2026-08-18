@@ -781,3 +781,365 @@ bool Database::deleteSubject(
         return false;
     }
 }
+
+
+// ==================================================
+// MARKS OPERATIONS
+// ==================================================
+
+
+// ==========================================
+// ADD MARKS
+// ==========================================
+
+bool Database::addMarks(
+    const Marks& marks
+) {
+
+    if (!session) {
+
+        cout << "Database is not connected."
+             << endl;
+
+        return false;
+    }
+
+    try {
+
+        mysqlx::Schema db =
+            session->getSchema(databaseName);
+
+        mysqlx::Table marksTable =
+            db.getTable("marks");
+
+        marksTable.insert(
+            "student_id",
+            "subject_id",
+            "marks_obtained"
+        )
+        .values(
+            marks.getStudentId(),
+            marks.getSubjectId(),
+            marks.getMarksObtained()
+        )
+        .execute();
+
+        cout << "Marks added successfully!"
+             << endl;
+
+        return true;
+    }
+
+    catch (const mysqlx::Error& error) {
+
+        cerr << "Error adding marks: "
+             << error.what()
+             << endl;
+
+        return false;
+    }
+}
+
+
+// ==========================================
+// DISPLAY ALL MARKS
+// ==========================================
+
+void Database::displayMarks() {
+
+    if (!session) {
+
+        cout << "Database is not connected."
+             << endl;
+
+        return;
+    }
+
+    try {
+
+        mysqlx::Schema db =
+            session->getSchema(databaseName);
+
+        mysqlx::Table marksTable =
+            db.getTable("marks");
+
+        mysqlx::RowResult result =
+            marksTable.select("*").execute();
+
+        cout << "\n";
+        cout << "========================================"
+             << endl;
+
+        cout << "              MARKS RECORDS"
+             << endl;
+
+        cout << "========================================"
+             << endl;
+
+        bool found = false;
+
+        for (mysqlx::Row row : result) {
+
+            found = true;
+
+            cout << "Mark ID        : "
+                 << row[0].get<int>()
+                 << endl;
+
+            cout << "Student ID     : "
+                 << row[1].get<int>()
+                 << endl;
+
+            cout << "Subject ID     : "
+                 << row[2].get<int>()
+                 << endl;
+
+            cout << "Marks Obtained : "
+                 << row[3].get<int>()
+                 << endl;
+
+            cout << "----------------------------------------"
+                 << endl;
+        }
+
+        if (!found) {
+
+            cout << "No marks found."
+                 << endl;
+        }
+    }
+
+    catch (const mysqlx::Error& error) {
+
+        cerr << "Error reading marks: "
+             << error.what()
+             << endl;
+    }
+}
+
+
+// ==========================================
+// DISPLAY STUDENT MARKS
+// ==========================================
+
+void Database::displayStudentMarks(
+    int studentId
+) {
+
+    if (!session) {
+
+        cout << "Database is not connected."
+             << endl;
+
+        return;
+    }
+
+    try {
+
+        mysqlx::SqlResult result = session->sql(
+            "SELECT "
+            "m.mark_id, "
+            "s.subject_code, "
+            "s.subject_name, "
+            "m.marks_obtained, "
+            "s.max_marks "
+            "FROM marks m "
+            "INNER JOIN subjects s "
+            "ON m.subject_id = s.subject_id "
+            "WHERE m.student_id = :studentId"
+        )
+        .bind("studentId", studentId)
+        .execute();
+
+        bool found = false;
+
+        cout << "\n";
+        cout << "========================================"
+             << endl;
+
+        cout << "          STUDENT MARKS"
+             << endl;
+
+        cout << "========================================"
+             << endl;
+
+        for (mysqlx::Row row : result.fetchAll()) {
+
+            found = true;
+
+            cout << "Mark ID        : "
+                 << row[0].get<int>()
+                 << endl;
+
+            cout << "Subject Code   : "
+                 << row[1].get<string>()
+                 << endl;
+
+            cout << "Subject Name   : "
+                 << row[2].get<string>()
+                 << endl;
+
+            cout << "Marks Obtained : "
+                 << row[3].get<int>()
+                 << endl;
+
+            cout << "Maximum Marks  : "
+                 << row[4].get<int>()
+                 << endl;
+
+            cout << "----------------------------------------"
+                 << endl;
+        }
+
+        if (!found) {
+
+            cout << "No marks found for Student ID "
+                 << studentId
+                 << endl;
+        }
+    }
+
+    catch (const mysqlx::Error& error) {
+
+        cerr << "Error reading student marks: "
+             << error.what()
+             << endl;
+    }
+}
+
+
+// ==========================================
+// UPDATE MARKS
+// ==========================================
+
+bool Database::updateMarks(
+    int studentId,
+    int subjectId,
+    int marksObtained
+) {
+
+    if (!session) {
+
+        cout << "Database is not connected."
+             << endl;
+
+        return false;
+    }
+
+    try {
+
+        mysqlx::Schema db =
+            session->getSchema(databaseName);
+
+        mysqlx::Table marksTable =
+            db.getTable("marks");
+
+        auto result =
+            marksTable.update()
+                .set(
+                    "marks_obtained",
+                    marksObtained
+                )
+                .where(
+                    "student_id = :studentId "
+                    "AND subject_id = :subjectId"
+                )
+                .bind(
+                    "studentId",
+                    studentId
+                )
+                .bind(
+                    "subjectId",
+                    subjectId
+                )
+                .execute();
+
+        if (result.getAffectedItemsCount() == 0) {
+
+            cout << "Marks record not found."
+                 << endl;
+
+            return false;
+        }
+
+        cout << "Marks updated successfully!"
+             << endl;
+
+        return true;
+    }
+
+    catch (const mysqlx::Error& error) {
+
+        cerr << "Error updating marks: "
+             << error.what()
+             << endl;
+
+        return false;
+    }
+}
+
+
+// ==========================================
+// DELETE MARKS
+// ==========================================
+
+bool Database::deleteMarks(
+    int studentId,
+    int subjectId
+) {
+
+    if (!session) {
+
+        cout << "Database is not connected."
+             << endl;
+
+        return false;
+    }
+
+    try {
+
+        mysqlx::Schema db =
+            session->getSchema(databaseName);
+
+        mysqlx::Table marksTable =
+            db.getTable("marks");
+
+        auto result =
+            marksTable.remove()
+                .where(
+                    "student_id = :studentId "
+                    "AND subject_id = :subjectId"
+                )
+                .bind(
+                    "studentId",
+                    studentId
+                )
+                .bind(
+                    "subjectId",
+                    subjectId
+                )
+                .execute();
+
+        if (result.getAffectedItemsCount() == 0) {
+
+            cout << "Marks record not found."
+                 << endl;
+
+            return false;
+        }
+
+        cout << "Marks deleted successfully!"
+             << endl;
+
+        return true;
+    }
+
+    catch (const mysqlx::Error& error) {
+
+        cerr << "Error deleting marks: "
+             << error.what()
+             << endl;
+
+        return false;
+    }
+}

@@ -2,24 +2,55 @@
 #define MARKS_H
 
 class Marks {
+
 private:
+
     int markId;
+
     int studentId;
+
     int subjectId;
-    double marksObtained;
+
+    int marksObtained;
+
 
 public:
+
     Marks();
 
-    Marks(int markId, int studentId, int subjectId,
-          double marksObtained);
+    Marks(
+        int markId,
+        int studentId,
+        int subjectId,
+        int marksObtained
+    );
 
-    void displayMarks() const;
+
+    // Getters
 
     int getMarkId() const;
+
     int getStudentId() const;
+
     int getSubjectId() const;
-    double getMarksObtained() const;
+
+    int getMarksObtained() const;
+
+
+    // Setters
+
+    void setMarkId(int markId);
+
+    void setStudentId(int studentId);
+
+    void setSubjectId(int subjectId);
+
+    void setMarksObtained(int marksObtained);
+
+
+    // Display
+
+    void displayMarks() const;
 };
 
 #endif

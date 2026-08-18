@@ -8,8 +8,10 @@
 
 #include "Student.h"
 #include "Subject.h"
+#include "Marks.h"
 
 using namespace std;
+
 
 class Database {
 
@@ -29,6 +31,11 @@ private:
 public:
 
     Database();
+
+
+    // ======================================
+    // DATABASE CONNECTION
+    // ======================================
 
     bool connect();
 
@@ -87,6 +94,32 @@ public:
     );
 
     bool deleteSubject(
+        int subjectId
+    );
+
+
+    // ======================================
+    // MARKS OPERATIONS
+    // ======================================
+
+    bool addMarks(
+        const Marks& marks
+    );
+
+    void displayMarks();
+
+    void displayStudentMarks(
+        int studentId
+    );
+
+    bool updateMarks(
+        int studentId,
+        int subjectId,
+        int marksObtained
+    );
+
+    bool deleteMarks(
+        int studentId,
         int subjectId
     );
 };

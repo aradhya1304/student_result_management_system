@@ -5,9 +5,11 @@
 
 using namespace std;
 
+
 int main() {
 
     Database database;
+
 
     if (!database.connect()) {
 
@@ -17,9 +19,12 @@ int main() {
         return 1;
     }
 
+
     showMainMenu(database);
 
+
     database.disconnect();
+
 
     return 0;
 }
