@@ -184,6 +184,7 @@ void showStudentMenu(Database& database) {
 
                     database.deleteStudent(studentId);
                 }
+
                 else {
 
                     cout << "Delete cancelled."
@@ -367,6 +368,7 @@ void showSubjectMenu(Database& database) {
 
                     database.deleteSubject(subjectId);
                 }
+
                 else {
 
                     cout << "Delete cancelled."
@@ -430,10 +432,6 @@ void showMarksMenu(Database& database) {
 
         switch (choice) {
 
-            // ==============================
-            // ADD MARKS
-            // ==============================
-
             case 1: {
 
                 int studentId;
@@ -469,20 +467,12 @@ void showMarksMenu(Database& database) {
             }
 
 
-            // ==============================
-            // VIEW ALL MARKS
-            // ==============================
-
             case 2:
 
                 database.displayMarks();
 
                 break;
 
-
-            // ==============================
-            // VIEW STUDENT MARKS
-            // ==============================
 
             case 3: {
 
@@ -502,10 +492,6 @@ void showMarksMenu(Database& database) {
                 break;
             }
 
-
-            // ==============================
-            // UPDATE MARKS
-            // ==============================
 
             case 4: {
 
@@ -538,10 +524,6 @@ void showMarksMenu(Database& database) {
             }
 
 
-            // ==============================
-            // DELETE MARKS
-            // ==============================
-
             case 5: {
 
                 int studentId;
@@ -573,6 +555,7 @@ void showMarksMenu(Database& database) {
                         subjectId
                     );
                 }
+
                 else {
 
                     cout << "Delete cancelled."
@@ -599,6 +582,74 @@ void showMarksMenu(Database& database) {
 
 
 // ==========================================
+// RESULT MENU
+// ==========================================
+
+void showResultMenu(Database& database) {
+
+    int choice;
+
+    do {
+
+        cout << "\n";
+        cout << "========================================"
+             << endl;
+
+        cout << "             RESULT MANAGEMENT"
+             << endl;
+
+        cout << "========================================"
+             << endl;
+
+        cout << "1. Generate Student Result" << endl;
+        cout << "2. Back" << endl;
+
+        cout << "========================================"
+             << endl;
+
+        cout << "Enter choice: ";
+        cin >> choice;
+
+        cin.ignore();
+
+
+        switch (choice) {
+
+            case 1: {
+
+                int studentId;
+
+                cout << "\n========== GENERATE RESULT ==========\n";
+
+                cout << "Enter student ID: ";
+                cin >> studentId;
+
+                cin.ignore();
+
+                database.generateResult(
+                    studentId
+                );
+
+                break;
+            }
+
+
+            case 2:
+
+                break;
+
+
+            default:
+
+                cout << "Invalid choice!"
+                     << endl;
+        }
+
+    } while (choice != 2);
+}
+
+
+// ==========================================
 // MAIN MENU
 // ==========================================
 
@@ -621,7 +672,8 @@ void showMainMenu(Database& database) {
         cout << "1. Student Management" << endl;
         cout << "2. Subject Management" << endl;
         cout << "3. Marks Management" << endl;
-        cout << "4. Exit" << endl;
+        cout << "4. Result Management" << endl;
+        cout << "5. Exit" << endl;
 
         cout << "========================================"
              << endl;
@@ -657,6 +709,13 @@ void showMainMenu(Database& database) {
 
             case 4:
 
+                showResultMenu(database);
+
+                break;
+
+
+            case 5:
+
                 cout << "\nExiting program..."
                      << endl;
 
@@ -669,5 +728,5 @@ void showMainMenu(Database& database) {
                      << endl;
         }
 
-    } while (choice != 4);
+    } while (choice != 5);
 }

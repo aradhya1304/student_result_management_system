@@ -1,38 +1,96 @@
 #ifndef RESULT_H
 #define RESULT_H
 
-#include <vector>
-#include "Marks.h"
+#include <string>
 
 using namespace std;
 
+
 class Result {
+
 private:
+
     int studentId;
-    vector<Marks> marksList;
 
-    double totalMarks;
+    int totalMarks;
+
+    int maximumMarks;
+
     double percentage;
-    char grade;
-    string status;
 
-    void calculateResult();
+    string grade;
+
+    string resultStatus;
+
 
 public:
+
+    // ==========================================
+    // CONSTRUCTORS
+    // ==========================================
+
     Result();
 
-    Result(int studentId);
+    Result(
+        int studentId,
+        int totalMarks,
+        int maximumMarks,
+        double percentage,
+        const string& grade,
+        const string& resultStatus
+    );
 
-    void addMarks(const Marks& marks);
 
-    void calculate();
+    // ==========================================
+    // GETTERS
+    // ==========================================
+
+    int getStudentId() const;
+
+    int getTotalMarks() const;
+
+    int getMaximumMarks() const;
+
+    double getPercentage() const;
+
+    string getGrade() const;
+
+    string getResultStatus() const;
+
+
+    // ==========================================
+    // SETTERS
+    // ==========================================
+
+    void setStudentId(int studentId);
+
+    void setTotalMarks(int totalMarks);
+
+    void setMaximumMarks(int maximumMarks);
+
+    void setPercentage(double percentage);
+
+    void setGrade(const string& grade);
+
+    void setResultStatus(const string& resultStatus);
+
+
+    // ==========================================
+    // CALCULATION METHODS
+    // ==========================================
+
+    void calculatePercentage();
+
+    void calculateGrade();
+
+    void calculateResultStatus();
+
+
+    // ==========================================
+    // DISPLAY
+    // ==========================================
 
     void displayResult() const;
-
-    double getTotalMarks() const;
-    double getPercentage() const;
-    char getGrade() const;
-    string getStatus() const;
 };
 
 #endif

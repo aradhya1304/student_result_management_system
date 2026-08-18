@@ -1,6 +1,7 @@
 #include "../include/Database.h"
 
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -1137,6 +1138,208 @@ bool Database::deleteMarks(
     catch (const mysqlx::Error& error) {
 
         cerr << "Error deleting marks: "
+             << error.what()
+             << endl;
+
+        return false;
+    }
+}
+
+
+// ==================================================
+// RESULT OPERATIONS
+// ==================================================
+
+
+// ==========================================
+// GENERATE RESULT
+// ==========================================
+
+bool Database::generateResult(
+    int studentId
+) {
+
+    if (!session) {
+
+        cout << "Database is not connected."
+             << endl;
+
+        return false;
+    }
+
+
+    try {
+
+        // ======================================
+        // STEP 1: CHECK STUDENT
+        // ======================================
+
+        mysqlx::SqlResult studentResult =
+            session->sql(
+                "SELECT student_id, name "
+                "FROM students "
+                "WHERE student_id = :studentId"
+            )
+            .bind(
+                "studentId",
+                studentId
+            )
+            .execute();
+
+
+        auto studentRows =
+            studentResult.fetchAll();
+
+
+        if (studentRows.empty()) {
+
+            cout << "\nStudent with ID "
+                 << studentId
+                 << " does not exist."
+                 << endl;
+
+            return false;
+        }
+
+
+        string studentName =
+            studentRows[0][1].get<string>();
+
+
+        // ======================================
+        // STEP 2: CALCULATE TOTAL
+        // ======================================
+
+        mysqlx::SqlResult result =
+            session->sql(
+                "SELECT "
+                "COALESCE(SUM(m.marks_obtained), 0), "
+                "COALESCE(SUM(s.max_marks), 0), "
+                "COUNT(m.mark_id) "
+                "FROM marks m "
+                "INNER JOIN subjects s "
+                "ON m.subject_id = s.subject_id "
+                "WHERE m.student_id = :studentId"
+            )
+            .bind(
+                "studentId",
+                studentId
+            )
+            .execute();
+
+
+        auto rows = result.fetchAll();
+
+
+        if (rows.empty()) {
+
+            cout << "Unable to calculate result."
+                 << endl;
+
+            return false;
+        }
+
+
+        int totalMarks =
+            rows[0][0].get<int>();
+
+
+        int maximumMarks =
+            rows[0][1].get<int>();
+
+
+        int subjectCount =
+            rows[0][2].get<int>();
+
+
+        // ======================================
+        // STEP 3: CHECK MARKS
+        // ======================================
+
+        if (subjectCount == 0) {
+
+            cout << "\nNo marks have been entered "
+                 << "for this student."
+                 << endl;
+
+            return false;
+        }
+
+
+        // ======================================
+        // STEP 4: CREATE RESULT OBJECT
+        // ======================================
+
+        Result studentResultObject;
+
+
+        studentResultObject.setStudentId(
+            studentId
+        );
+
+
+        studentResultObject.setTotalMarks(
+            totalMarks
+        );
+
+
+        studentResultObject.setMaximumMarks(
+            maximumMarks
+        );
+
+
+        // ======================================
+        // STEP 5: CALCULATE PERCENTAGE
+        // ======================================
+
+        studentResultObject.calculatePercentage();
+
+
+        // ======================================
+        // STEP 6: CALCULATE GRADE
+        // ======================================
+
+        studentResultObject.calculateGrade();
+
+
+        // ======================================
+        // STEP 7: CALCULATE PASS/FAIL
+        // ======================================
+
+        studentResultObject.calculateResultStatus();
+
+
+        // ======================================
+        // STEP 8: DISPLAY RESULT
+        // ======================================
+
+        cout << "\n";
+
+        cout << "========================================"
+             << endl;
+
+        cout << "           FINAL RESULT"
+             << endl;
+
+        cout << "========================================"
+             << endl;
+
+
+        cout << "Student Name   : "
+             << studentName
+             << endl;
+
+
+        studentResultObject.displayResult();
+
+
+        return true;
+    }
+
+
+    catch (const mysqlx::Error& error) {
+
+        cerr << "Error generating result: "
              << error.what()
              << endl;
 
