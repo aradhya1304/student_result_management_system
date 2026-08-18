@@ -31,6 +31,17 @@ public:
     bool addStudent(const Student& student);
 
     void searchStudent(int studentId);
+
+    bool updateStudent(
+        int studentId,
+        const string& name,
+        const string& email,
+        const string& phone,
+        const string& course,
+        int semester
+    );
+
+    bool deleteStudent(int studentId);
 };
 
 #endif
