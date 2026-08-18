@@ -6,9 +6,9 @@
 using namespace std;
 
 
-// ==========================================
+// ==================================================
 // CONSTRUCTOR
-// ==========================================
+// ==================================================
 
 Database::Database() {
 
@@ -22,9 +22,9 @@ Database::Database() {
 }
 
 
-// ==========================================
+// ==================================================
 // CONNECT
-// ==========================================
+// ==================================================
 
 bool Database::connect() {
 
@@ -54,9 +54,9 @@ bool Database::connect() {
 }
 
 
-// ==========================================
+// ==================================================
 // DISCONNECT
-// ==========================================
+// ==================================================
 
 void Database::disconnect() {
 
@@ -72,9 +72,9 @@ void Database::disconnect() {
 }
 
 
-// ==========================================
+// ==================================================
 // CONNECTION STATUS
-// ==========================================
+// ==================================================
 
 bool Database::isConnected() const {
 
@@ -87,9 +87,9 @@ bool Database::isConnected() const {
 // ==================================================
 
 
-// ==========================================
+// ==================================================
 // DISPLAY STUDENTS
-// ==========================================
+// ==================================================
 
 void Database::displayStudents() {
 
@@ -113,6 +113,7 @@ void Database::displayStudents() {
             students.select("*").execute();
 
         cout << "\n";
+
         cout << "========================================"
              << endl;
 
@@ -172,9 +173,9 @@ void Database::displayStudents() {
 }
 
 
-// ==========================================
+// ==================================================
 // ADD STUDENT
-// ==========================================
+// ==================================================
 
 bool Database::addStudent(
     const Student& student
@@ -188,6 +189,24 @@ bool Database::addStudent(
         return false;
     }
 
+
+    // ==============================================
+    // DATABASE-LEVEL VALIDATION
+    // ==============================================
+
+    if (student.getSemester() < 1 ||
+        student.getSemester() > 8) {
+
+        cout << "Invalid semester."
+             << endl;
+
+        cout << "Semester must be between 1 and 8."
+             << endl;
+
+        return false;
+    }
+
+
     try {
 
         mysqlx::Schema db =
@@ -195,6 +214,38 @@ bool Database::addStudent(
 
         mysqlx::Table students =
             db.getTable("students");
+
+
+        // ==========================================
+        // CHECK DUPLICATE EMAIL
+        // ==========================================
+
+        mysqlx::SqlResult emailResult =
+            session->sql(
+                "SELECT student_id "
+                "FROM students "
+                "WHERE email = :email"
+            )
+            .bind(
+                "email",
+                student.getEmail()
+            )
+            .execute();
+
+
+        if (!emailResult.fetchAll().empty()) {
+
+            cout << "A student with this email "
+                 << "already exists."
+                 << endl;
+
+            return false;
+        }
+
+
+        // ==========================================
+        // INSERT STUDENT
+        // ==========================================
 
         students.insert(
             "name",
@@ -211,6 +262,7 @@ bool Database::addStudent(
             student.getSemester()
         )
         .execute();
+
 
         cout << "Student added successfully!"
              << endl;
@@ -229,9 +281,9 @@ bool Database::addStudent(
 }
 
 
-// ==========================================
+// ==================================================
 // SEARCH STUDENT
-// ==========================================
+// ==================================================
 
 void Database::searchStudent(
     int studentId
@@ -244,6 +296,16 @@ void Database::searchStudent(
 
         return;
     }
+
+
+    if (studentId <= 0) {
+
+        cout << "Student ID must be greater than 0."
+             << endl;
+
+        return;
+    }
+
 
     try {
 
@@ -266,6 +328,7 @@ void Database::searchStudent(
             found = true;
 
             cout << "\n";
+
             cout << "========================================"
                  << endl;
 
@@ -321,9 +384,9 @@ void Database::searchStudent(
 }
 
 
-// ==========================================
+// ==================================================
 // UPDATE STUDENT
-// ==========================================
+// ==================================================
 
 bool Database::updateStudent(
     int studentId,
@@ -342,6 +405,25 @@ bool Database::updateStudent(
         return false;
     }
 
+
+    if (studentId <= 0) {
+
+        cout << "Student ID must be greater than 0."
+             << endl;
+
+        return false;
+    }
+
+
+    if (semester < 1 || semester > 8) {
+
+        cout << "Semester must be between 1 and 8."
+             << endl;
+
+        return false;
+    }
+
+
     try {
 
         mysqlx::Schema db =
@@ -349,6 +431,71 @@ bool Database::updateStudent(
 
         mysqlx::Table students =
             db.getTable("students");
+
+
+        // ==========================================
+        // CHECK STUDENT EXISTS
+        // ==========================================
+
+        mysqlx::SqlResult studentResult =
+            session->sql(
+                "SELECT student_id "
+                "FROM students "
+                "WHERE student_id = :id"
+            )
+            .bind(
+                "id",
+                studentId
+            )
+            .execute();
+
+
+        if (studentResult.fetchAll().empty()) {
+
+            cout << "Student with ID "
+                 << studentId
+                 << " was not found."
+                 << endl;
+
+            return false;
+        }
+
+
+        // ==========================================
+        // CHECK DUPLICATE EMAIL
+        // ==========================================
+
+        mysqlx::SqlResult emailResult =
+            session->sql(
+                "SELECT student_id "
+                "FROM students "
+                "WHERE email = :email "
+                "AND student_id <> :id"
+            )
+            .bind(
+                "email",
+                email
+            )
+            .bind(
+                "id",
+                studentId
+            )
+            .execute();
+
+
+        if (!emailResult.fetchAll().empty()) {
+
+            cout << "Another student already "
+                 << "uses this email."
+                 << endl;
+
+            return false;
+        }
+
+
+        // ==========================================
+        // UPDATE
+        // ==========================================
 
         auto result =
             students.update()
@@ -361,6 +508,7 @@ bool Database::updateStudent(
                 .bind("id", studentId)
                 .execute();
 
+
         if (result.getAffectedItemsCount() == 0) {
 
             cout << "Student with ID "
@@ -370,6 +518,7 @@ bool Database::updateStudent(
 
             return false;
         }
+
 
         cout << "Student updated successfully!"
              << endl;
@@ -388,9 +537,9 @@ bool Database::updateStudent(
 }
 
 
-// ==========================================
+// ==================================================
 // DELETE STUDENT
-// ==========================================
+// ==================================================
 
 bool Database::deleteStudent(
     int studentId
@@ -403,6 +552,16 @@ bool Database::deleteStudent(
 
         return false;
     }
+
+
+    if (studentId <= 0) {
+
+        cout << "Student ID must be greater than 0."
+             << endl;
+
+        return false;
+    }
+
 
     try {
 
@@ -418,6 +577,7 @@ bool Database::deleteStudent(
                 .bind("id", studentId)
                 .execute();
 
+
         if (result.getAffectedItemsCount() == 0) {
 
             cout << "Student with ID "
@@ -427,6 +587,7 @@ bool Database::deleteStudent(
 
             return false;
         }
+
 
         cout << "Student deleted successfully!"
              << endl;
@@ -450,9 +611,9 @@ bool Database::deleteStudent(
 // ==================================================
 
 
-// ==========================================
+// ==================================================
 // ADD SUBJECT
-// ==========================================
+// ==================================================
 
 bool Database::addSubject(
     const Subject& subject
@@ -466,6 +627,16 @@ bool Database::addSubject(
         return false;
     }
 
+
+    if (subject.getMaxMarks() <= 0) {
+
+        cout << "Maximum marks must be greater than 0."
+             << endl;
+
+        return false;
+    }
+
+
     try {
 
         mysqlx::Schema db =
@@ -473,6 +644,39 @@ bool Database::addSubject(
 
         mysqlx::Table subjects =
             db.getTable("subjects");
+
+
+        // ==========================================
+        // CHECK DUPLICATE SUBJECT CODE
+        // ==========================================
+
+        mysqlx::SqlResult codeResult =
+            session->sql(
+                "SELECT subject_id "
+                "FROM subjects "
+                "WHERE subject_code = :code"
+            )
+            .bind(
+                "code",
+                subject.getSubjectCode()
+            )
+            .execute();
+
+
+        if (!codeResult.fetchAll().empty()) {
+
+            cout << "Subject code "
+                 << subject.getSubjectCode()
+                 << " already exists."
+                 << endl;
+
+            return false;
+        }
+
+
+        // ==========================================
+        // INSERT SUBJECT
+        // ==========================================
 
         subjects.insert(
             "subject_code",
@@ -485,6 +689,7 @@ bool Database::addSubject(
             subject.getMaxMarks()
         )
         .execute();
+
 
         cout << "Subject added successfully!"
              << endl;
@@ -503,9 +708,9 @@ bool Database::addSubject(
 }
 
 
-// ==========================================
+// ==================================================
 // DISPLAY SUBJECTS
-// ==========================================
+// ==================================================
 
 void Database::displaySubjects() {
 
@@ -516,6 +721,7 @@ void Database::displaySubjects() {
 
         return;
     }
+
 
     try {
 
@@ -528,7 +734,9 @@ void Database::displaySubjects() {
         mysqlx::RowResult result =
             subjects.select("*").execute();
 
+
         cout << "\n";
+
         cout << "========================================"
              << endl;
 
@@ -538,7 +746,9 @@ void Database::displaySubjects() {
         cout << "========================================"
              << endl;
 
+
         bool found = false;
+
 
         for (mysqlx::Row row : result) {
 
@@ -564,6 +774,7 @@ void Database::displaySubjects() {
                  << endl;
         }
 
+
         if (!found) {
 
             cout << "No subjects found."
@@ -580,9 +791,9 @@ void Database::displaySubjects() {
 }
 
 
-// ==========================================
+// ==================================================
 // SEARCH SUBJECT
-// ==========================================
+// ==================================================
 
 void Database::searchSubject(
     int subjectId
@@ -595,6 +806,16 @@ void Database::searchSubject(
 
         return;
     }
+
+
+    if (subjectId <= 0) {
+
+        cout << "Subject ID must be greater than 0."
+             << endl;
+
+        return;
+    }
+
 
     try {
 
@@ -610,13 +831,16 @@ void Database::searchSubject(
                     .bind("id", subjectId)
                     .execute();
 
+
         bool found = false;
+
 
         for (mysqlx::Row row : result) {
 
             found = true;
 
             cout << "\n";
+
             cout << "========================================"
                  << endl;
 
@@ -646,6 +870,7 @@ void Database::searchSubject(
                  << endl;
         }
 
+
         if (!found) {
 
             cout << "Subject with ID "
@@ -664,9 +889,9 @@ void Database::searchSubject(
 }
 
 
-// ==========================================
+// ==================================================
 // UPDATE SUBJECT
-// ==========================================
+// ==================================================
 
 bool Database::updateSubject(
     int subjectId,
@@ -683,6 +908,25 @@ bool Database::updateSubject(
         return false;
     }
 
+
+    if (subjectId <= 0) {
+
+        cout << "Subject ID must be greater than 0."
+             << endl;
+
+        return false;
+    }
+
+
+    if (maxMarks <= 0) {
+
+        cout << "Maximum marks must be greater than 0."
+             << endl;
+
+        return false;
+    }
+
+
     try {
 
         mysqlx::Schema db =
@@ -691,14 +935,144 @@ bool Database::updateSubject(
         mysqlx::Table subjects =
             db.getTable("subjects");
 
+
+        // ==========================================
+        // CHECK SUBJECT EXISTS
+        // ==========================================
+
+        mysqlx::SqlResult subjectResult =
+            session->sql(
+                "SELECT subject_id "
+                "FROM subjects "
+                "WHERE subject_id = :id"
+            )
+            .bind(
+                "id",
+                subjectId
+            )
+            .execute();
+
+
+        if (subjectResult.fetchAll().empty()) {
+
+            cout << "Subject with ID "
+                 << subjectId
+                 << " was not found."
+                 << endl;
+
+            return false;
+        }
+
+
+        // ==========================================
+        // CHECK DUPLICATE SUBJECT CODE
+        // ==========================================
+
+        mysqlx::SqlResult codeResult =
+            session->sql(
+                "SELECT subject_id "
+                "FROM subjects "
+                "WHERE subject_code = :code "
+                "AND subject_id <> :id"
+            )
+            .bind(
+                "code",
+                subjectCode
+            )
+            .bind(
+                "id",
+                subjectId
+            )
+            .execute();
+
+
+        if (!codeResult.fetchAll().empty()) {
+
+            cout << "Another subject already "
+                 << "uses this subject code."
+                 << endl;
+
+            return false;
+        }
+
+
+        // ==========================================
+        // CHECK EXISTING MARKS
+        //
+        // New maximum marks cannot be smaller
+        // than marks already entered.
+        // ==========================================
+
+        mysqlx::SqlResult marksResult =
+            session->sql(
+                "SELECT MAX(marks_obtained) "
+                "FROM marks "
+                "WHERE subject_id = :subjectId"
+            )
+            .bind(
+                "subjectId",
+                subjectId
+            )
+            .execute();
+
+
+        auto rows = marksResult.fetchAll();
+
+
+        if (!rows.empty()) {
+
+            if (!rows[0][0].isNull()) {
+
+                int highestMarks =
+                    rows[0][0].get<int>();
+
+
+                if (maxMarks < highestMarks) {
+
+                    cout << "Cannot set maximum marks "
+                         << "to "
+                         << maxMarks
+                         << "."
+                         << endl;
+
+                    cout << "Existing marks of "
+                         << highestMarks
+                         << " would become invalid."
+                         << endl;
+
+                    return false;
+                }
+            }
+        }
+
+
+        // ==========================================
+        // UPDATE SUBJECT
+        // ==========================================
+
         auto result =
             subjects.update()
-                .set("subject_code", subjectCode)
-                .set("subject_name", subjectName)
-                .set("max_marks", maxMarks)
-                .where("subject_id = :id")
-                .bind("id", subjectId)
+                .set(
+                    "subject_code",
+                    subjectCode
+                )
+                .set(
+                    "subject_name",
+                    subjectName
+                )
+                .set(
+                    "max_marks",
+                    maxMarks
+                )
+                .where(
+                    "subject_id = :id"
+                )
+                .bind(
+                    "id",
+                    subjectId
+                )
                 .execute();
+
 
         if (result.getAffectedItemsCount() == 0) {
 
@@ -709,6 +1083,7 @@ bool Database::updateSubject(
 
             return false;
         }
+
 
         cout << "Subject updated successfully!"
              << endl;
@@ -727,9 +1102,9 @@ bool Database::updateSubject(
 }
 
 
-// ==========================================
+// ==================================================
 // DELETE SUBJECT
-// ==========================================
+// ==================================================
 
 bool Database::deleteSubject(
     int subjectId
@@ -743,6 +1118,16 @@ bool Database::deleteSubject(
         return false;
     }
 
+
+    if (subjectId <= 0) {
+
+        cout << "Subject ID must be greater than 0."
+             << endl;
+
+        return false;
+    }
+
+
     try {
 
         mysqlx::Schema db =
@@ -751,11 +1136,13 @@ bool Database::deleteSubject(
         mysqlx::Table subjects =
             db.getTable("subjects");
 
+
         auto result =
             subjects.remove()
                 .where("subject_id = :id")
                 .bind("id", subjectId)
                 .execute();
+
 
         if (result.getAffectedItemsCount() == 0) {
 
@@ -766,6 +1153,7 @@ bool Database::deleteSubject(
 
             return false;
         }
+
 
         cout << "Subject deleted successfully!"
              << endl;
@@ -789,9 +1177,9 @@ bool Database::deleteSubject(
 // ==================================================
 
 
-// ==========================================
+// ==================================================
 // ADD MARKS
-// ==========================================
+// ==================================================
 
 bool Database::addMarks(
     const Marks& marks
@@ -805,7 +1193,173 @@ bool Database::addMarks(
         return false;
     }
 
+
+    int studentId =
+        marks.getStudentId();
+
+    int subjectId =
+        marks.getSubjectId();
+
+    int marksObtained =
+        marks.getMarksObtained();
+
+
+    // ==========================================
+    // BASIC VALIDATION
+    // ==========================================
+
+    if (studentId <= 0) {
+
+        cout << "Invalid student ID."
+             << endl;
+
+        return false;
+    }
+
+
+    if (subjectId <= 0) {
+
+        cout << "Invalid subject ID."
+             << endl;
+
+        return false;
+    }
+
+
+    if (marksObtained < 0) {
+
+        cout << "Marks cannot be negative."
+             << endl;
+
+        return false;
+    }
+
+
     try {
+
+        // ==========================================
+        // STEP 1: CHECK STUDENT
+        // ==========================================
+
+        mysqlx::SqlResult studentResult =
+            session->sql(
+                "SELECT student_id "
+                "FROM students "
+                "WHERE student_id = :studentId"
+            )
+            .bind(
+                "studentId",
+                studentId
+            )
+            .execute();
+
+
+        if (studentResult.fetchAll().empty()) {
+
+            cout << "Student with ID "
+                 << studentId
+                 << " does not exist."
+                 << endl;
+
+            return false;
+        }
+
+
+        // ==========================================
+        // STEP 2: CHECK SUBJECT
+        // ==========================================
+
+        mysqlx::SqlResult subjectResult =
+            session->sql(
+                "SELECT max_marks "
+                "FROM subjects "
+                "WHERE subject_id = :subjectId"
+            )
+            .bind(
+                "subjectId",
+                subjectId
+            )
+            .execute();
+
+
+        auto subjectRows =
+            subjectResult.fetchAll();
+
+
+        if (subjectRows.empty()) {
+
+            cout << "Subject with ID "
+                 << subjectId
+                 << " does not exist."
+                 << endl;
+
+            return false;
+        }
+
+
+        int maximumMarks =
+            subjectRows[0][0].get<int>();
+
+
+        // ==========================================
+        // STEP 3: CHECK MAXIMUM MARKS
+        // ==========================================
+
+        if (marksObtained > maximumMarks) {
+
+            cout << "Invalid marks."
+                 << endl;
+
+            cout << "Marks obtained: "
+                 << marksObtained
+                 << endl;
+
+            cout << "Maximum allowed: "
+                 << maximumMarks
+                 << endl;
+
+            return false;
+        }
+
+
+        // ==========================================
+        // STEP 4: CHECK DUPLICATE MARKS
+        // ==========================================
+
+        mysqlx::SqlResult duplicateResult =
+            session->sql(
+                "SELECT mark_id "
+                "FROM marks "
+                "WHERE student_id = :studentId "
+                "AND subject_id = :subjectId"
+            )
+            .bind(
+                "studentId",
+                studentId
+            )
+            .bind(
+                "subjectId",
+                subjectId
+            )
+            .execute();
+
+
+        if (!duplicateResult.fetchAll().empty()) {
+
+            cout << "Marks already exist for "
+                 << "this student and subject."
+                 << endl;
+
+            cout << "Use Update Marks instead."
+                 << endl;
+
+            return false;
+        }
+
+
+        // ==========================================
+        // STEP 5: INSERT MARKS
+        // ==========================================
 
         mysqlx::Schema db =
             session->getSchema(databaseName);
@@ -813,17 +1367,19 @@ bool Database::addMarks(
         mysqlx::Table marksTable =
             db.getTable("marks");
 
+
         marksTable.insert(
             "student_id",
             "subject_id",
             "marks_obtained"
         )
         .values(
-            marks.getStudentId(),
-            marks.getSubjectId(),
-            marks.getMarksObtained()
+            studentId,
+            subjectId,
+            marksObtained
         )
         .execute();
+
 
         cout << "Marks added successfully!"
              << endl;
@@ -842,9 +1398,9 @@ bool Database::addMarks(
 }
 
 
-// ==========================================
+// ==================================================
 // DISPLAY ALL MARKS
-// ==========================================
+// ==================================================
 
 void Database::displayMarks() {
 
@@ -855,6 +1411,7 @@ void Database::displayMarks() {
 
         return;
     }
+
 
     try {
 
@@ -867,7 +1424,9 @@ void Database::displayMarks() {
         mysqlx::RowResult result =
             marksTable.select("*").execute();
 
+
         cout << "\n";
+
         cout << "========================================"
              << endl;
 
@@ -877,7 +1436,9 @@ void Database::displayMarks() {
         cout << "========================================"
              << endl;
 
+
         bool found = false;
+
 
         for (mysqlx::Row row : result) {
 
@@ -903,6 +1464,7 @@ void Database::displayMarks() {
                  << endl;
         }
 
+
         if (!found) {
 
             cout << "No marks found."
@@ -919,9 +1481,9 @@ void Database::displayMarks() {
 }
 
 
-// ==========================================
+// ==================================================
 // DISPLAY STUDENT MARKS
-// ==========================================
+// ==================================================
 
 void Database::displayStudentMarks(
     int studentId
@@ -935,26 +1497,43 @@ void Database::displayStudentMarks(
         return;
     }
 
+
+    if (studentId <= 0) {
+
+        cout << "Student ID must be greater than 0."
+             << endl;
+
+        return;
+    }
+
+
     try {
 
-        mysqlx::SqlResult result = session->sql(
-            "SELECT "
-            "m.mark_id, "
-            "s.subject_code, "
-            "s.subject_name, "
-            "m.marks_obtained, "
-            "s.max_marks "
-            "FROM marks m "
-            "INNER JOIN subjects s "
-            "ON m.subject_id = s.subject_id "
-            "WHERE m.student_id = :studentId"
-        )
-        .bind("studentId", studentId)
-        .execute();
+        mysqlx::SqlResult result =
+            session->sql(
+                "SELECT "
+                "m.mark_id, "
+                "s.subject_code, "
+                "s.subject_name, "
+                "m.marks_obtained, "
+                "s.max_marks "
+                "FROM marks m "
+                "INNER JOIN subjects s "
+                "ON m.subject_id = s.subject_id "
+                "WHERE m.student_id = :studentId"
+            )
+            .bind(
+                "studentId",
+                studentId
+            )
+            .execute();
+
 
         bool found = false;
 
+
         cout << "\n";
+
         cout << "========================================"
              << endl;
 
@@ -964,7 +1543,9 @@ void Database::displayStudentMarks(
         cout << "========================================"
              << endl;
 
-        for (mysqlx::Row row : result.fetchAll()) {
+
+        for (mysqlx::Row row :
+             result.fetchAll()) {
 
             found = true;
 
@@ -992,6 +1573,7 @@ void Database::displayStudentMarks(
                  << endl;
         }
 
+
         if (!found) {
 
             cout << "No marks found for Student ID "
@@ -1009,9 +1591,9 @@ void Database::displayStudentMarks(
 }
 
 
-// ==========================================
+// ==================================================
 // UPDATE MARKS
-// ==========================================
+// ==================================================
 
 bool Database::updateMarks(
     int studentId,
@@ -1027,13 +1609,166 @@ bool Database::updateMarks(
         return false;
     }
 
+
+    // ==========================================
+    // BASIC VALIDATION
+    // ==========================================
+
+    if (studentId <= 0) {
+
+        cout << "Invalid student ID."
+             << endl;
+
+        return false;
+    }
+
+
+    if (subjectId <= 0) {
+
+        cout << "Invalid subject ID."
+             << endl;
+
+        return false;
+    }
+
+
+    if (marksObtained < 0) {
+
+        cout << "Marks cannot be negative."
+             << endl;
+
+        return false;
+    }
+
+
     try {
+
+        // ==========================================
+        // STEP 1: CHECK STUDENT
+        // ==========================================
+
+        mysqlx::SqlResult studentResult =
+            session->sql(
+                "SELECT student_id "
+                "FROM students "
+                "WHERE student_id = :studentId"
+            )
+            .bind(
+                "studentId",
+                studentId
+            )
+            .execute();
+
+
+        if (studentResult.fetchAll().empty()) {
+
+            cout << "Student with ID "
+                 << studentId
+                 << " does not exist."
+                 << endl;
+
+            return false;
+        }
+
+
+        // ==========================================
+        // STEP 2: GET MAXIMUM MARKS
+        // ==========================================
+
+        mysqlx::SqlResult subjectResult =
+            session->sql(
+                "SELECT max_marks "
+                "FROM subjects "
+                "WHERE subject_id = :subjectId"
+            )
+            .bind(
+                "subjectId",
+                subjectId
+            )
+            .execute();
+
+
+        auto subjectRows =
+            subjectResult.fetchAll();
+
+
+        if (subjectRows.empty()) {
+
+            cout << "Subject with ID "
+                 << subjectId
+                 << " does not exist."
+                 << endl;
+
+            return false;
+        }
+
+
+        int maximumMarks =
+            subjectRows[0][0].get<int>();
+
+
+        // ==========================================
+        // STEP 3: CHECK MAXIMUM
+        // ==========================================
+
+        if (marksObtained > maximumMarks) {
+
+            cout << "Invalid marks."
+                 << endl;
+
+            cout << "Marks obtained: "
+                 << marksObtained
+                 << endl;
+
+            cout << "Maximum allowed: "
+                 << maximumMarks
+                 << endl;
+
+            return false;
+        }
+
+
+        // ==========================================
+        // STEP 4: CHECK EXISTING RECORD
+        // ==========================================
+
+        mysqlx::SqlResult existingResult =
+            session->sql(
+                "SELECT mark_id "
+                "FROM marks "
+                "WHERE student_id = :studentId "
+                "AND subject_id = :subjectId"
+            )
+            .bind(
+                "studentId",
+                studentId
+            )
+            .bind(
+                "subjectId",
+                subjectId
+            )
+            .execute();
+
+
+        if (existingResult.fetchAll().empty()) {
+
+            cout << "Marks record not found."
+                 << endl;
+
+            return false;
+        }
+
+
+        // ==========================================
+        // STEP 5: UPDATE
+        // ==========================================
 
         mysqlx::Schema db =
             session->getSchema(databaseName);
 
         mysqlx::Table marksTable =
             db.getTable("marks");
+
 
         auto result =
             marksTable.update()
@@ -1055,6 +1790,7 @@ bool Database::updateMarks(
                 )
                 .execute();
 
+
         if (result.getAffectedItemsCount() == 0) {
 
             cout << "Marks record not found."
@@ -1062,6 +1798,7 @@ bool Database::updateMarks(
 
             return false;
         }
+
 
         cout << "Marks updated successfully!"
              << endl;
@@ -1080,9 +1817,9 @@ bool Database::updateMarks(
 }
 
 
-// ==========================================
+// ==================================================
 // DELETE MARKS
-// ==========================================
+// ==================================================
 
 bool Database::deleteMarks(
     int studentId,
@@ -1097,6 +1834,17 @@ bool Database::deleteMarks(
         return false;
     }
 
+
+    if (studentId <= 0 ||
+        subjectId <= 0) {
+
+        cout << "Invalid student or subject ID."
+             << endl;
+
+        return false;
+    }
+
+
     try {
 
         mysqlx::Schema db =
@@ -1104,6 +1852,7 @@ bool Database::deleteMarks(
 
         mysqlx::Table marksTable =
             db.getTable("marks");
+
 
         auto result =
             marksTable.remove()
@@ -1121,6 +1870,7 @@ bool Database::deleteMarks(
                 )
                 .execute();
 
+
         if (result.getAffectedItemsCount() == 0) {
 
             cout << "Marks record not found."
@@ -1128,6 +1878,7 @@ bool Database::deleteMarks(
 
             return false;
         }
+
 
         cout << "Marks deleted successfully!"
              << endl;
@@ -1151,9 +1902,9 @@ bool Database::deleteMarks(
 // ==================================================
 
 
-// ==========================================
+// ==================================================
 // GENERATE RESULT
-// ==========================================
+// ==================================================
 
 bool Database::generateResult(
     int studentId
@@ -1162,6 +1913,15 @@ bool Database::generateResult(
     if (!session) {
 
         cout << "Database is not connected."
+             << endl;
+
+        return false;
+    }
+
+
+    if (studentId <= 0) {
+
+        cout << "Student ID must be greater than 0."
              << endl;
 
         return false;
@@ -1228,7 +1988,8 @@ bool Database::generateResult(
             .execute();
 
 
-        auto rows = result.fetchAll();
+        auto rows =
+            result.fetchAll();
 
 
         if (rows.empty()) {
@@ -1243,10 +2004,8 @@ bool Database::generateResult(
         int totalMarks =
             rows[0][0].get<int>();
 
-
         int maximumMarks =
             rows[0][1].get<int>();
-
 
         int subjectCount =
             rows[0][2].get<int>();
@@ -1335,7 +2094,6 @@ bool Database::generateResult(
 
         return true;
     }
-
 
     catch (const mysqlx::Error& error) {
 

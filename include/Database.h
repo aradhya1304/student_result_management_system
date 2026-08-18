@@ -122,6 +122,15 @@ public:
         int studentId,
         int subjectId
     );
+
+
+    // ======================================
+    // RESULT OPERATIONS
+    // ======================================
+
+    bool generateResult(
+        int studentId
+    );
 };
 
 #endif
