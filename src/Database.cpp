@@ -1,49 +1,44 @@
-void Database::displayStudents() {
+bool Database::addStudent(const Student& student) {
 
     if (!session) {
         cout << "Database is not connected." << endl;
-        return;
+        return false;
     }
 
     try {
 
-        mysqlx::Schema db = session->getSchema(databaseName);
+        mysqlx::Schema db =
+            session->getSchema(databaseName);
 
-        mysqlx::Table students = db.getTable("students");
+        mysqlx::Table students =
+            db.getTable("students");
 
-        mysqlx::RowResult result = students.select("*").execute();
+        students.insert(
+            "name",
+            "email",
+            "phone",
+            "course",
+            "semester"
+        )
+        .values(
+    student.getName(),
+    student.getEmail(),
+    student.getPhone(),
+    student.getCourse(),
+    student.getSemester()
+)
+        .execute();
 
-        cout << "\n======================================" << endl;
-        cout << "          STUDENT RECORDS" << endl;
-        cout << "======================================" << endl;
+        cout << "Student added successfully!" << endl;
 
-        for (mysqlx::Row row : result) {
+        return true;
 
-            cout << "Student ID : "
-                 << row[0].get<int>() << endl;
-
-            cout << "Name       : "
-                 << row[1].get<string>() << endl;
-
-            cout << "Email      : "
-                 << row[2].get<string>() << endl;
-
-            cout << "Phone      : "
-                 << row[3].get<string>() << endl;
-
-            cout << "Course     : "
-                 << row[4].get<string>() << endl;
-
-            cout << "Semester   : "
-                 << row[5].get<int>() << endl;
-
-            cout << "--------------------------------------"
-                 << endl;
-        }
     }
     catch (const mysqlx::Error& error) {
 
-        cerr << "Error reading students: "
+        cerr << "Error adding student: "
              << error.what() << endl;
+
+        return false;
     }
 }

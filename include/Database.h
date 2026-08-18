@@ -5,6 +5,8 @@
 #include <memory>
 #include <mysqlx/xdevapi.h>
 
+#include "Student.h"
+
 using namespace std;
 
 class Database {
@@ -25,6 +27,8 @@ public:
     bool isConnected() const;
 
     void displayStudents();
+
+    bool addStudent(const Student& student);
 };
 
 #endif

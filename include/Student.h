@@ -11,13 +11,14 @@ private:
     string name;
     string email;
     string course;
+    string phone;
     int semester;
 
 public:
     Student();
 
     Student(int id, string name, string email,
-            string course, int semester);
+        string phone, string course, int semester);
 
     void displayStudent() const;
 
