@@ -1,8 +1,8 @@
-bool Database::addStudent(const Student& student) {
+void Database::searchStudent(int studentId) {
 
     if (!session) {
         cout << "Database is not connected." << endl;
-        return false;
+        return;
     }
 
     try {
@@ -13,32 +13,54 @@ bool Database::addStudent(const Student& student) {
         mysqlx::Table students =
             db.getTable("students");
 
-        students.insert(
-            "name",
-            "email",
-            "phone",
-            "course",
-            "semester"
-        )
-        .values(
-    student.getName(),
-    student.getEmail(),
-    student.getPhone(),
-    student.getCourse(),
-    student.getSemester()
-)
-        .execute();
+        mysqlx::RowResult result =
+            students.select("*")
+                    .where("student_id = :id")
+                    .bind("id", studentId)
+                    .execute();
 
-        cout << "Student added successfully!" << endl;
+        bool found = false;
 
-        return true;
+        for (mysqlx::Row row : result) {
+
+            found = true;
+
+            cout << "\n======================================" << endl;
+            cout << "          STUDENT FOUND" << endl;
+            cout << "======================================" << endl;
+
+            cout << "Student ID : "
+                 << row[0].get<int>() << endl;
+
+            cout << "Name       : "
+                 << row[1].get<string>() << endl;
+
+            cout << "Email      : "
+                 << row[2].get<string>() << endl;
+
+            cout << "Phone      : "
+                 << row[3].get<string>() << endl;
+
+            cout << "Course     : "
+                 << row[4].get<string>() << endl;
+
+            cout << "Semester   : "
+                 << row[5].get<int>() << endl;
+
+            cout << "======================================" << endl;
+        }
+
+        if (!found) {
+            cout << "\nStudent with ID "
+                 << studentId
+                 << " was not found."
+                 << endl;
+        }
 
     }
     catch (const mysqlx::Error& error) {
 
-        cerr << "Error adding student: "
+        cerr << "Error searching student: "
              << error.what() << endl;
-
-        return false;
     }
 }

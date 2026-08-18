@@ -29,6 +29,8 @@ public:
     void displayStudents();
 
     bool addStudent(const Student& student);
+
+    void searchStudent(int studentId);
 };
 
 #endif

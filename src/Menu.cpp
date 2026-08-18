@@ -18,7 +18,8 @@ void showMainMenu(Database& database) {
 
         cout << "1. Add Student" << endl;
         cout << "2. View Students" << endl;
-        cout << "3. Exit" << endl;
+        cout << "3. Search Student" << endl;
+        cout << "4. Exit" << endl;
 
         cout << "========================================" << endl;
 
@@ -76,7 +77,23 @@ void showMainMenu(Database& database) {
 
                 break;
 
-            case 3:
+            case 3: {
+
+                int studentId;
+
+                cout << "\n===== SEARCH STUDENT =====\n";
+
+                cout << "Enter student ID: ";
+                cin >> studentId;
+
+                cin.ignore();
+
+                database.searchStudent(studentId);
+
+                break;
+            }
+
+            case 4:
 
                 cout << "\nExiting program..." << endl;
 
@@ -88,5 +105,5 @@ void showMainMenu(Database& database) {
                      << endl;
         }
 
-    } while (choice != 3);
+    } while (choice != 4);
 }
