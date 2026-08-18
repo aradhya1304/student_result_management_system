@@ -8,10 +8,17 @@ int main() {
     Database database;
 
     if (database.connect()) {
-        cout << "Connection successful!" << endl;
-    }
 
-    database.disconnect();
+        cout << "Database connection test successful!"
+             << endl;
+
+        database.disconnect();
+
+    } else {
+
+        cout << "Database connection failed!"
+             << endl;
+    }
 
     return 0;
 }

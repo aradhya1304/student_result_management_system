@@ -12,15 +12,39 @@ Database::Database() {
 
 bool Database::connect() {
 
-    cout << "Connecting to MySQL..." << endl;
+    try {
 
-    // MySQL connection code will be added next.
-    // We are keeping this separate from the rest
-    // of the application.
+        session = make_unique<mysqlx::Session>(
+            host,
+            33060,
+            username,
+            password
+        );
 
-    return true;
+        cout << "Connected to MySQL successfully!" << endl;
+
+        return true;
+
+    }
+    catch (const mysqlx::Error& error) {
+
+        cerr << "MySQL Connection Error: "
+             << error.what() << endl;
+
+        return false;
+    }
 }
 
 void Database::disconnect() {
-    cout << "MySQL connection closed." << endl;
+
+    if (session) {
+        session->close();
+        session.reset();
+
+        cout << "MySQL connection closed." << endl;
+    }
+}
+
+bool Database::isConnected() const {
+    return session != nullptr;
 }
