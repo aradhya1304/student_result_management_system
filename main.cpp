@@ -1,6 +1,7 @@
 #include <iostream>
 #include "include/Student.h"
 #include "include/Subject.h"
+#include "include/Marks.h"
 
 using namespace std;
 
@@ -21,6 +22,13 @@ int main() {
         3
     );
 
+    Marks marks(
+        301,
+        101,
+        201,
+        85
+    );
+
     cout << "======================================" << endl;
     cout << "      STUDENT RESULT MANAGEMENT" << endl;
     cout << "======================================" << endl;
@@ -30,6 +38,9 @@ int main() {
 
     cout << "\n----- SUBJECT INFORMATION -----\n";
     subject.displaySubject();
+
+    cout << "\n----- MARKS INFORMATION -----\n";
+    marks.displayMarks();
 
     return 0;
 }
