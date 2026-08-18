@@ -1,15 +1,26 @@
-#include "Database.h"
-#include <stdexcept>
+#include "../include/Database.h"
+#include <iostream>
 
-Database::Database(const std::string& host,
-                   const std::string& user,
-                   const std::string& password,
-                   const std::string& database) {
-    driver = sql::mysql::get_mysql_driver_instance();
-    connection.reset(driver->connect(host, user, password));
-    connection->setSchema(database);
+using namespace std;
+
+Database::Database() {
+    host = "localhost";
+    username = "root";
+    password = "";
+    databaseName = "student_result_db";
 }
 
-sql::Connection* Database::getConnection() {
-    return connection.get();
+bool Database::connect() {
+
+    cout << "Connecting to MySQL..." << endl;
+
+    // MySQL connection code will be added next.
+    // We are keeping this separate from the rest
+    // of the application.
+
+    return true;
+}
+
+void Database::disconnect() {
+    cout << "MySQL connection closed." << endl;
 }

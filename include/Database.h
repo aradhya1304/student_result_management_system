@@ -1,19 +1,22 @@
-#pragma once
-#include <memory>
+#ifndef DATABASE_H
+#define DATABASE_H
+
 #include <string>
-#include <mysql_driver.h>
-#include <mysql_connection.h>
+
+using namespace std;
 
 class Database {
 private:
-    sql::mysql::MySQL_Driver* driver;
-    std::unique_ptr<sql::Connection> connection;
+    string host;
+    string username;
+    string password;
+    string databaseName;
 
 public:
-    Database(const std::string& host,
-             const std::string& user,
-             const std::string& password,
-             const std::string& database);
+    Database();
 
-    sql::Connection* getConnection();
+    bool connect();
+    void disconnect();
 };
+
+#endif
