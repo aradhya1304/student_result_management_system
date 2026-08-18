@@ -1,30 +1,31 @@
-#pragma once
+#ifndef STUDENT_H
+#define STUDENT_H
+
 #include <string>
 
-class Person {
-protected:
-    std::string name;
+using namespace std;
 
-public:
-    explicit Person(const std::string& name);
-    virtual ~Person() = default;
-    virtual void display() const = 0;
-};
-
-class Student : public Person {
+class Student {
 private:
-    int rollNo;
-    std::string course;
+    int studentId;
+    string name;
+    string email;
+    string course;
     int semester;
 
 public:
-    Student(int rollNo, const std::string& name,
-            const std::string& course, int semester);
+    Student();
 
-    int getRollNo() const;
-    const std::string& getName() const;
-    const std::string& getCourse() const;
+    Student(int id, string name, string email,
+            string course, int semester);
+
+    void displayStudent() const;
+
+    int getStudentId() const;
+    string getName() const;
+    string getEmail() const;
+    string getCourse() const;
     int getSemester() const;
-
-    void display() const override;
 };
+
+#endif
