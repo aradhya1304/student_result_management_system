@@ -3,17 +3,25 @@ cmake_minimum_required(VERSION 3.20)
 project(StudentResultManagementSystem)
 
 
+# ==========================================
+# C++ STANDARD
+# ==========================================
+
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-find_package(mysql-concpp REQUIRED)
+# ==========================================
+# SOURCE FILES
+# ==========================================
 
+add_executable(
+    student_system
 
-add_executable(student_system
+    src/main.cpp
 
-    main.cpp
+    src/Database.cpp
 
     src/Student.cpp
 
@@ -23,15 +31,34 @@ add_executable(student_system
 
     src/Result.cpp
 
-    src/Database.cpp
+    src/Validation.cpp
 
     src/Menu.cpp
 )
 
 
-target_link_libraries(
+# ==========================================
+# INCLUDE DIRECTORY
+# ==========================================
 
+target_include_directories(
     student_system
+    PRIVATE
+    include
+)
 
-    mysql::concpp
+
+# ==========================================
+# MYSQL CONNECTOR/C++
+# ==========================================
+
+find_package(
+    MySQL REQUIRED
+)
+
+
+target_link_libraries(
+    student_system
+    PRIVATE
+    mysqlcppconn8
 )

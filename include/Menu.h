@@ -3,6 +3,10 @@
 
 #include "Database.h"
 
-void showMainMenu(Database& database);
+
+void showMainMenu(
+    Database& database
+);
+
 
 #endif
